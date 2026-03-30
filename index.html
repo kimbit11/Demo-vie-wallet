@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VIE Wallet</title>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+
+<style>
+body {
+  font-family: Arial;
+  background: #020617;
+  color: white;
+  text-align: center;
+}
+.container {
+  width: 400px;
+  margin: 50px auto;
+  background: #0f172a;
+  padding: 20px;
+  border-radius: 12px;
+}
+button {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 6px;
+  border: none;
+  background: #38bdf8;
+}
+input, textarea {
+  width: 90%;
+  padding: 8px;
+  margin: 5px;
+  border-radius: 6px;
+}
+.hidden { display:none; }
+.box {
+  background: #020617;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  word-break: break-all;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🚀 VIE WALLET</h2>
+
+<!-- LOCK -->
+<div id="lock">
+  <input type="password" id="password" placeholder="Password">
+  <br>
+  <button onclick="unlock()">Unlock</button>
+  <button onclick="showSetup()">Create / Import</button>
+</div>
+
+<!-- SETUP -->
+<div id="setup" class="hidden">
+  <button onclick="createWallet()">Create Wallet</button>
+  <textarea id="importData" placeholder="Private key or seed phrase"></textarea>
+  <button onclick="importWallet()">Import</button>
+</div>
+
+<!-- WALLET -->
+<div id="wallet" class="hidden">
+
+  <div class="box">
+    <p id="addr"></p>
+    <p id="eth"></p>
+    <p id="usdt"></p>
+  </div>
+
+  <div class="box">
+    <h4>Send ETH</h4>
+    <input id="to" placeholder="Receiver address">
+    <input id="amount" placeholder="Amount ETH">
+    <button onclick="sendETH()">Send</button>
+  </div>
+
+  <button onclick="lockWallet()">Lock</button>
+
+</div>
+
+</div>
+
+<script>
+
+let wallet;
+let provider = new ethers.providers.InfuraProvider("sepolia"); // testnet
+
+// USDT contract (example testnet → bạn thay sau)
+const USDT_ADDRESS = "0x0000000000000000000000000000000000000000";
+const ERC20_ABI = [
+  "function balanceOf(address) view returns (uint)",
+  "function decimals() view returns (uint8)"
+];
+
+// ===== ENCRYPT =====
+function encrypt(data, pass){
+  return CryptoJS.AES.encrypt(data, pass).toString();
+}
+function decrypt(data, pass){
+  return CryptoJS.AES.decrypt(data, pass).toString(CryptoJS.enc.Utf8);
+}
+
+// ===== CREATE =====
+function createWallet(){
+  let w = ethers.Wallet.createRandom();
+  saveWallet(w);
+}
+
+// ===== IMPORT =====
+function importWallet(){
+  let input = document.getElementById("importData").value.trim();
+  let w;
+
+  try{
+    if(input.split(" ").length > 1){
+      w = ethers.Wallet.fromMnemonic(input);
+    }else{
+      w = new ethers.Wallet(input);
+    }
+    saveWallet(w);
+  }catch{
+    alert("Invalid input");
+  }
+}
+
+// ===== SAVE =====
+function saveWallet(w){
+  let pass = document.getElementById("password").value;
+  if(!pass) return alert("Set password");
+
+  let enc = encrypt(w.privateKey, pass);
+  localStorage.setItem("vie_wallet", enc);
+
+  alert("Saved!");
+  location.reload();
+}
+
+// ===== UNLOCK =====
+function unlock(){
+  let pass = document.getElementById("password").value;
+  let enc = localStorage.getItem("vie_wallet");
+
+  if(!enc) return alert("No wallet");
+
+  try{
+    let pk = decrypt(enc, pass);
+    wallet = new ethers.Wallet(pk, provider);
+    loadWallet();
+  }catch{
+    alert("Wrong password");
+  }
+}
+
+// ===== LOAD =====
+async function loadWallet(){
+  document.getElementById("lock").classList.add("hidden");
+  document.getElementById("wallet").classList.remove("hidden");
+
+  document.getElementById("addr").innerText = wallet.address;
+
+  let bal = await wallet.getBalance();
+  document.getElementById("eth").innerText =
+    "ETH: " + ethers.utils.formatEther(bal);
+
+  // USDT
+  try{
+    let contract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
+    let dec = await contract.decimals();
+    let b = await contract.balanceOf(wallet.address);
+    document.getElementById("usdt").innerText =
+      "USDT: " + (b / (10 ** dec));
+  }catch{
+    document.getElementById("usdt").innerText = "USDT: (not configured)";
+  }
+}
+
+// ===== SEND ETH =====
+async function sendETH(){
+  let to = document.getElementById("to").value;
+  let amount = document.getElementById("amount").value;
+
+  try{
+    let tx = await wallet.sendTransaction({
+      to: to,
+      value: ethers.utils.parseEther(amount)
+    });
+
+    alert("TX sent: " + tx.hash);
+  }catch(e){
+    alert("Error: " + e.message);
+  }
+}
+
+// ===== UI =====
+function showSetup(){
+  document.getElementById("setup").classList.remove("hidden");
+}
+function lockWallet(){
+  location.reload();
+}
+
+</script>
+
+</body>
+</html>
