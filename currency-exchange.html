@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VIE Wallet - Crypto Exchange</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #020617;
+  color: white;
+  text-align: center;
+}
+
+.container {
+  width: 360px;
+  margin: 50px auto;
+  background: #0f172a;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+input, select {
+  width: 90%;
+  padding: 8px;
+  margin: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: #38bdf8;
+  cursor: pointer;
+}
+
+.box {
+  margin-top: 15px;
+  padding: 10px;
+  background: #020617;
+  border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h3>💱 VIE Wallet Exchange</h3>
+
+<input id="usdtInput" placeholder="Enter USDT amount">
+
+<select id="currency">
+  <option value="USD">🇺🇸 USD (USA)</option>
+  <option value="EUR">🇪🇺 EUR (Europe)</option>
+  <option value="JPY">🇯🇵 JPY (Japan)</option>
+  <option value="KRW">🇰🇷 KRW (Korea)</option>
+  <option value="SGD">🇸🇬 SGD (Singapore)</option>
+  <option value="VND">🇻🇳 VND (Vietnam)</option>
+</select>
+
+<button onclick="convert()">Convert</button>
+
+<div class="box">
+  <p id="result">Result: ...</p>
+</div>
+
+</div>
+
+<script>
+
+// ===== DEMO RATES =====
+// (Có thể thay bằng API thật sau)
+const rates = {
+  USD: 1,
+  EUR: 0.92,
+  JPY: 150,
+  KRW: 1350,
+  SGD: 1.35,
+  VND: 25000
+};
+
+// ===== CONVERT =====
+function convert(){
+  let usdt = parseFloat(document.getElementById("usdtInput").value);
+  let currency = document.getElementById("currency").value;
+
+  if(!usdt || usdt <= 0){
+    alert("Invalid amount");
+    return;
+  }
+
+  let result = usdt * rates[currency];
+
+  document.getElementById("result").innerText =
+    usdt + " USDT = " + result.toLocaleString() + " " + currency;
+}
+
+</script>
+
+</body>
+</html>
