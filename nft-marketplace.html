@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VIE Wallet - NFT Market</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #020617;
+  color: white;
+  text-align: center;
+}
+
+.container {
+  width: 400px;
+  margin: 30px auto;
+  background: #0f172a;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+input {
+  width: 90%;
+  padding: 8px;
+  margin: 5px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  padding: 8px;
+  margin: 5px;
+  border-radius: 6px;
+  border: none;
+  background: #22c55e;
+  cursor: pointer;
+}
+
+.card {
+  background: #020617;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+img {
+  width: 100%;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🖼 VIE NFT Marketplace</h2>
+
+<!-- CREATE NFT -->
+<div class="card">
+  <h4>Create NFT</h4>
+  <input id="nftName" placeholder="NFT Name">
+  <input id="nftImage" placeholder="Image URL">
+  <input id="nftPrice" placeholder="Price (ETH)">
+  <button onclick="createNFT()">Create</button>
+</div>
+
+<!-- BALANCE -->
+<div class="card">
+  <p id="balance">Balance: 2 ETH</p>
+</div>
+
+<!-- MARKET -->
+<div id="market"></div>
+
+</div>
+
+<script>
+
+let balance = 2; // ETH demo
+let nfts = [];
+
+// ===== CREATE NFT =====
+function createNFT() {
+  let name = document.getElementById("nftName").value;
+  let image = document.getElementById("nftImage").value;
+  let price = parseFloat(document.getElementById("nftPrice").value);
+
+  if (!name || !image || !price) {
+    alert("Fill all fields");
+    return;
+  }
+
+  let nft = {
+    id: Date.now(),
+    name,
+    image,
+    price,
+    owner: "me"
+  };
+
+  nfts.push(nft);
+  render();
+}
+
+// ===== BUY NFT =====
+function buyNFT(id) {
+  let nft = nfts.find(n => n.id === id);
+
+  if (balance < nft.price) {
+    alert("Not enough ETH");
+    return;
+  }
+
+  balance -= nft.price;
+  nft.owner = "me";
+
+  render();
+}
+
+// ===== SELL NFT =====
+function sellNFT(id) {
+  let nft = nfts.find(n => n.id === id);
+
+  nft.owner = "market";
+
+  render();
+}
+
+// ===== RENDER =====
+function render() {
+  document.getElementById("balance").innerText =
+    "Balance: " + balance.toFixed(2) + " ETH";
+
+  let html = "";
+
+  nfts.forEach(nft => {
+    html += `
+      <div class="card">
+        <img src="${nft.image}">
+        <h4>${nft.name}</h4>
+        <p>Price: ${nft.price} ETH</p>
+        <p>Owner: ${nft.owner}</p>
+
+        ${
+          nft.owner === "market"
+          ? `<button onclick="buyNFT(${nft.id})">Buy</button>`
+          : `<button onclick="sellNFT(${nft.id})">Sell</button>`
+        }
+      </div>
+    `;
+  });
+
+  document.getElementById("market").innerHTML = html;
+}
+
+render();
+
+</script>
+
+</body>
+</html>
